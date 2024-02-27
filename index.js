@@ -1,26 +1,47 @@
-let myLeads = [] // initiating an empty array
+let myLeads = []
 const inputEl = document.getElementById("input-el")
 const inputBtn = document.getElementById("input-btn")
 const ulEl = document.getElementById("ul-el")
+const deleteBtn = document.getElementById("delete-btn")
+const leadsFromLocalStorage = JSON.parse( localStorage.getItem("myLeads") )
+const tabBtn = document.getElementById("tab-btn")
 
-inputBtn.addEventListener("click", function() {
-    myLeads.push(inputEl.value) // pushes the value in the input feild into myLeads Array
-    inputEl.value = "" // clears the content of the input feild. Basically sets it to null
-    renderLeads() // runs renderleads function
-}) 
+if (leadsFromLocalStorage) {
+    myLeads = leadsFromLocalStorage
+    render(myLeads)
+}
 
-// this function displays the leads in the bullet points form with link
-function renderLeads() {
-    let listItems = "" // an empty block to store the urls (aquired through myLeads array)
-    for (let i = 0; i < myLeads.length; i++) {
-        // This is called as template literal. They are denoted by backticks. As we can see, we can breakdown the statement into multiple lines. The good thing is that, we can use HTML elements in this lines
+tabBtn.addEventListener("click", function(){    
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+        myLeads.push(tabs[0].url)
+        localStorage.setItem("myLeads", JSON.stringify(myLeads) )
+        render(myLeads)
+    })
+})
+
+function render(leads) {
+    let listItems = ""
+    for (let i = 0; i < leads.length; i++) {
         listItems += `
             <li>
-                <a target='_blank' href='${myLeads[i]}'>
-                    ${myLeads[i]}
+                <a target='_blank' href='${leads[i]}'>
+                    ${leads[i]}
                 </a>
             </li>
         `
-    } // if we see the above code, it will display the URLs in bullent points formate. Gives an anchor tag to it. and it will set the its redirect link as the URL of that current array. If we do not do that, the URLs will be pasted in the bullet list as a plain text
+    }
     ulEl.innerHTML = listItems
 }
+
+deleteBtn.addEventListener("dblclick", function() {
+    localStorage.clear()
+    myLeads = []
+    render(myLeads)
+})
+
+inputBtn.addEventListener("click", function() {
+    myLeads.push(inputEl.value)
+    inputEl.value = ""
+    localStorage.setItem("myLeads", JSON.stringify(myLeads) )
+    render(myLeads)
+})
